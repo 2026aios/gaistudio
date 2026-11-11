@@ -16,8 +16,9 @@ OUT = os.path.join(HERE, "out")
 W, H = 320, 270
 SS = 2
 CW, CH = W * SS, H * SS
-FONT = "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc"
-TEXT_LINES = ["殺爆", "你！"]
+FONT = os.path.join(HERE, "..", "fonts", "jf-openhuninn-2.1.ttf")  # jf open 粉圓（SIL OFL，可商用）
+TEXT = "殺爆你！"
+INK = (74, 52, 46)  # 深咖啡色字，白色描邊（參考可愛貼圖風格）
 
 cells = [Image.open(os.path.join(HERE, "cells", f"cell_{k}.png")).convert("RGBA") for k in range(1, 7)]
 # 所有格共用同一個裁切框與縮放，保持角色大小一致、保留跳躍高度
@@ -71,31 +72,33 @@ def shuttle(d, x, y, ang, size=1.0):
         d.line([(sx, sy), (sx - ux * 40 * SS, sy - uy * 40 * SS)], fill=(255, 80, 60, 220), width=3 * SS)
 
 
-def big_text(c, scale, shake, rot):
-    """兩行大字，紅黃配色＋粗描邊，以右側為中心"""
-    size = int(64 * SS * scale)
-    if size < 6:
-        return
-    f = ImageFont.truetype(FONT, size)
-    layer = Image.new("RGBA", c.size, (0, 0, 0, 0))
-    d = ImageDraw.Draw(layer)
-    cx, cy = CW - 82 * SS + shake[0], 92 * SS + shake[1]
-    for i, line in enumerate(TEXT_LINES):
-        y = cy + (i - 0.5) * size * 1.02
-        x = cx + (i * 14 - 7) * SS * scale
-        d.text((x + 4 * SS, y + 5 * SS), line, font=f, fill=(60, 10, 10, 160), anchor="mm")  # 陰影
-        d.text((x, y), line, font=f, fill=(255, 40, 40), stroke_width=max(3, size // 7),
-               stroke_fill=(255, 245, 120), anchor="mm")
-        d.text((x, y), line, font=f, fill=(230, 20, 30), stroke_width=max(1, size // 22),
-               stroke_fill=(70, 0, 10), anchor="mm")
-    layer = layer.rotate(rot, resample=Image.BICUBIC, center=(cx, cy))
-    c.alpha_composite(layer)
+def big_text(c, t, i, shake):
+    """直排文字，逐字彈出（0.4 → 1.2 → 1.0）"""
+    size = 50 * SS
+    cx, top = CW - 34 * SS, 18 * SS
+    pop = [0.4, 1.2, 1.0]
+    tilts = [-6, 4, -3, 8]
+    for k, ch in enumerate(TEXT):
+        tk = t - k * 0.5           # 每個字晚半格出現
+        if tk < 0:
+            continue
+        j = int(tk)
+        sc = pop[j] if j < len(pop) else 1.0
+        bob = 0  # 結尾靜止，相同的格會被合併、檔案較小
+        fs = max(6, int(size * sc))
+        f = ImageFont.truetype(FONT, fs)
+        x = cx + (k % 2 * 2 - 1) * 4 * SS + shake[0]
+        y = top + k * size * 1.02 + size / 2 + bob + shake[1]
+        layer = Image.new("RGBA", c.size, (0, 0, 0, 0))
+        ImageDraw.Draw(layer).text((x, y), ch, font=f, fill=INK + (255,), stroke_width=max(2, fs // 9),
+                                   stroke_fill=(255, 255, 255, 255), anchor="mm")
+        c.alpha_composite(layer.rotate(tilts[k], resample=Image.BICUBIC, center=(x, y)))
 
 
 # 時間軸：每格 (動作格 index, 是否擊球瞬間)
 TIMELINE = [0, 0, 1, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5]
 IMPACT = 6           # 擊球瞬間的時間點
-DUR = 90             # 每格毫秒
+DUR = 100            # 每格毫秒：20 格 × 100ms = 2 秒 × 2 次 = 4 秒（LINE 規定 1～4 秒整數）
 RACKET4 = to_canvas(362, 30)  # 第 4 格球拍面位置（格內座標）
 
 
@@ -114,11 +117,9 @@ def render(i):
     d = ImageDraw.Draw(c)
     if 0 <= t <= 1:
         star(d, RACKET4[0], RACKET4[1], (14 + t * 6) * SS, t * 40)
-    if t >= 0:  # 文字彈出：0.3 → 1.25 → 1.0，之後微微抖動
-        pop = [0.35, 1.25, 1.05, 0.97, 1.0]
-        sc = pop[t] if t < len(pop) else 1.0 + 0.03 * math.sin(t * 2.1)
-        tshake = (shake[0] * 0.6, shake[1] * 0.6) if t < 4 else ((-1) ** i * 1 * SS, 0)
-        big_text(c, sc, tshake, 8 + (2 if t % 2 else -2) * (t < 4))
+    if t >= 0:  # 文字逐字彈出
+        tshake = (shake[0] * 0.5, shake[1] * 0.5)
+        big_text(c, t, i, tshake)
     d = ImageDraw.Draw(c)
     if t >= 1:  # 球被殺向右下
         p = min(1.0, (t - 1) / 4)
@@ -157,14 +158,16 @@ def main():
     # LINE APNG：共用色盤，必要時降色直到 ≤ 300KB
     apng = os.path.join(OUT, "smash_line.png")
     loops = max(1, min(4, 4000 // (DUR * len(raw))))
-    for colors in (256, 192, 128, 96):
-        frames = to_palette(raw, colors)
+    for colors in (256, 192, 128, 96, 64):
+        # 先用共用色盤減色（讓相鄰格相同像素完全一致、差異區塊變小），再轉回全彩 RGBA 輸出：
+        # LINE 只接受全彩（RGBA）PNG，索引色會被判定格式錯誤
+        frames = [f.convert("RGBA") for f in to_palette(raw, colors)]
         frames[0].save(apng, save_all=True, append_images=frames[1:], duration=DUR, loop=loops,
-                       transparency=colors - 1, disposal=0, blend=0, optimize=True)
+                       disposal=0, blend=0, optimize=True)
         if os.path.getsize(apng) <= 300 * 1024:
             break
     for i, f in enumerate(frames):
-        f.save(os.path.join(fdir, f"frame_{i:02d}.png"), transparency=colors - 1, optimize=True)
+        f.save(os.path.join(fdir, f"frame_{i:02d}.png"), optimize=True)
     print(f"APNG: {len(frames)} 格 × {DUR}ms × {loops} 次 = {len(frames)*DUR*loops/1000:.1f}s, "
           f"{colors} 色, {os.path.getsize(apng)//1024}KB")
 

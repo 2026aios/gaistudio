@@ -51,7 +51,7 @@ footer{font-size:13px;color:var(--muted);line-height:1.7;max-width:70ch}
 <header>
   <div>
     <h1>羽球少女・動態貼圖</h1>
-    <p>由你提供的插圖去背後製作的 8 款 LINE 動態貼圖（APNG）。動畫會自動播放；點「逐格圖片」可看每一格。</p>
+    <p>可直接上傳 LINE Creators Market 的 8 款動態貼圖（APNG，全彩 RGBA）。動畫會自動播放；點「逐格圖片」可看每一格。</p>
   </div>
   <div class="bgsw" role="group" aria-label="預覽背景">背景
     <button type="button" data-bg="chat" aria-pressed="true">聊天室</button>
@@ -59,7 +59,7 @@ footer{font-size:13px;color:var(--muted);line-height:1.7;max-width:70ch}
     <button type="button" data-bg="check" aria-pressed="false">透明格</button>
   </div>
 </header>
-<div class="spec"><span>320 × 270 px</span><span>透明背景</span><span>12–16 格</span><span>每次播放 ≤ 4 秒</span><span>每檔 ≤ 300KB</span></div>
+<div class="spec"><span>320 × 270 px</span><span>透明背景</span><span>10–20 格</span><span>總播放 3 或 4 秒</span><span>每檔 ≤ 300KB</span></div>
 <section class="grid">
 {{CARDS}}
 </section>
@@ -67,7 +67,7 @@ footer{font-size:13px;color:var(--muted);line-height:1.7;max-width:70ch}
   <div class="extra"><div class="stage" style="width:160px"><img src="{{MAIN}}" alt="主要圖片" width="240" height="240"></div>main.png・主要圖片 240×240</div>
   <div class="extra"><div class="stage" style="width:96px;aspect-ratio:96/74"><img src="{{TAB}}" alt="標籤圖片" width="96" height="74"></div>tab.png・標籤圖片 96×74</div>
 </section>
-<footer>檔案位於 repo 的 <code>line-stickers/out/</code>。上架 LINE Creators Market 時，把 01–08 的 APNG 重新命名為 01.png～08.png，連同 main.png、tab.png 打包成 zip 上傳即可。動態貼圖一組需 8、16 或 24 張。</footer>
+<footer>上傳檔已打包成 repo 的 <code>line-stickers/line_animated_stickers.zip</code>（01.png～08.png、main.png、tab.png）。在 LINE Creators Market 新增作品時請選「動態貼圖」，再上傳這個 zip。</footer>
 </div>
 <script>
 const btns=document.querySelectorAll('.bgsw button');

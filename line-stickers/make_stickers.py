@@ -9,15 +9,21 @@
 import math
 import os
 import random
+import shutil
+import sys
 
 from PIL import Image, ImageDraw, ImageFont
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "smash"))
+from make_smash import to_palette  # noqa: E402  共用色盤減色
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "out")
 W, H = 320, 270
 SS = 2  # supersampling
 CW, CH = W * SS, H * SS
-FONT = "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc"
+FONT = os.path.join(HERE, "fonts", "jf-openhuninn-2.1.ttf")  # jf open 粉圓（SIL OFL，可商用）
+INK = (74, 52, 46)  # 統一用深咖啡色字＋白色描邊（可愛貼圖風格）
 
 cut = Image.open(os.path.join(HERE, "cut.png")).convert("RGBA")
 cut = cut.crop(cut.getbbox())
@@ -58,8 +64,8 @@ def text(c, s, xy, size, fill=(255, 214, 0), stroke=(30, 40, 110), angle=0, scal
     size = max(4, int(size * scale))
     f = ImageFont.truetype(FONT, size)
     layer = Image.new("RGBA", c.size, (0, 0, 0, 0))
-    ImageDraw.Draw(layer).text(xy, s, font=f, fill=fill, stroke_width=max(2, size // 9),
-                               stroke_fill=stroke, anchor=anchor)
+    ImageDraw.Draw(layer).text(xy, s, font=f, fill=INK, stroke_width=max(2, size // 8),
+                               stroke_fill=(255, 255, 255), anchor=anchor)
     if angle:
         layer = layer.rotate(angle, resample=Image.BICUBIC, center=xy)
     c.alpha_composite(layer)
@@ -287,15 +293,16 @@ def s_ready(i, n):
     return c
 
 
+# (名稱, 函式, 格數, 每格毫秒)：格數 × 毫秒 × 循環次數 必須剛好是 1～4 秒（LINE 規定）
 STICKERS = [
-    ("01_jump", s_jump, 12, 100),
-    ("02_smash", s_smash, 16, 80),
-    ("03_cheer", s_cheer, 12, 90),
-    ("04_wiggle", s_wiggle, 12, 100),
-    ("05_nice", s_nice, 14, 90),
-    ("06_run", s_run, 12, 80),
-    ("07_thanks", s_thanks, 12, 110),
-    ("08_ready", s_ready, 14, 90),
+    ("01_jump", s_jump, 10, 100),     # 1 秒 × 4 次
+    ("02_smash", s_smash, 20, 100),   # 2 秒 × 2 次
+    ("03_cheer", s_cheer, 10, 100),   # 1 秒 × 4 次
+    ("04_wiggle", s_wiggle, 10, 100), # 1 秒 × 4 次
+    ("05_nice", s_nice, 10, 150),     # 1.5 秒 × 2 次 = 3 秒
+    ("06_run", s_run, 10, 100),       # 1 秒 × 4 次
+    ("07_thanks", s_thanks, 10, 150), # 1.5 秒 × 2 次 = 3 秒
+    ("08_ready", s_ready, 10, 100),   # 1 秒 × 4 次
 ]
 
 
@@ -326,27 +333,29 @@ def main():
     report = []
     for name, fn, n, dur in STICKERS:
         d = os.path.join(OUT, name)
-        os.makedirs(d, exist_ok=True)
-        frames = []
-        for i in range(n):
-            f = fn(i, n).resize((W, H), Image.LANCZOS)
-            f = quantize(f)
-            f.save(os.path.join(d, f"frame_{i:02d}.png"), optimize=True)
-            frames.append(f)
+        shutil.rmtree(d, ignore_errors=True)
+        os.makedirs(d)
+        raw = [fn(i, n).resize((W, H), Image.LANCZOS) for i in range(n)]
         p = os.path.join(OUT, f"{name}.png")
-        loops, total = save_apng(frames, p, dur)
+        for colors in (256, 192, 128, 96, 64):
+            frames = [f.convert("RGBA") for f in to_palette(raw, colors)]
+            loops, total = save_apng(frames, p, dur)
+            if os.path.getsize(p) <= 300 * 1024:
+                break
+        for i, f in enumerate(frames):
+            f.save(os.path.join(d, f"frame_{i:02d}.png"), optimize=True)
         kb = os.path.getsize(p) / 1024
-        report.append(f"{name}: {n} 格, {dur}ms/格, 單次 {total/1000:.2f}s × {loops} 次, {kb:.0f}KB")
+        report.append(f"{name}: {n} 格, {dur}ms/格, 單次 {total/1000:.2f}s × {loops} 次, {colors} 色, {kb:.0f}KB")
     # 主要圖片 240x240：用 01 跳躍
     frames = []
-    for i in range(12):
-        big = s_jump(i, 12)
+    for i in range(10):
+        big = s_jump(i, 10)
         sq = Image.new("RGBA", (CW, CW), (0, 0, 0, 0))
         sq.alpha_composite(big, (0, (CW - CH) // 2))
-        frames.append(quantize(sq.resize((240, 240), Image.LANCZOS)))
-    save_apng(frames, os.path.join(OUT, "main.png"), 100)
+        frames.append(sq.resize((240, 240), Image.LANCZOS))
+    save_apng([f.convert("RGBA") for f in to_palette(frames)], os.path.join(OUT, "main.png"), 100)
     # 標籤圖片 96x74（靜態）
-    tab = s_nice(13, 14).resize((96, 81), Image.LANCZOS).crop((0, 4, 96, 78))
+    tab = s_nice(9, 10).resize((96, 81), Image.LANCZOS).crop((0, 4, 96, 78))
     tab.save(os.path.join(OUT, "tab.png"), optimize=True)
     print("\n".join(report))
 
