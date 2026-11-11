@@ -1,0 +1,78 @@
+<title>羽球少女動態貼圖</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<style>
+/* Layout: a sticker sheet — header with LINE spec, then a responsive grid of sticker cards on a court-tinted ground */
+:root{
+  --bg:#eef3f7; --surface:#ffffff; --fg:#17223d; --muted:#5b6782; --line:#d7e0ea;
+  --accent:#2c4fb3; --court:#cfe3d4; --courtline:#ffffff; --ok:#1d7f4e; --bad:#c2334d;
+  --font:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f1524;--surface:#18213a;--fg:#e7ecf7;--muted:#9aa6c3;--line:#2a3554;--accent:#8fa9ff;--court:#cfe3d4;--courtline:#ffffff;--ok:#5fd39a;--bad:#ff7d95;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1524;--surface:#18213a;--fg:#e7ecf7;--muted:#9aa6c3;--line:#2a3554;--accent:#8fa9ff;--court:#cfe3d4;--courtline:#ffffff;--ok:#5fd39a;--bad:#ff7d95;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+header{display:flex;flex-wrap:wrap;gap:16px 32px;align-items:flex-end;justify-content:space-between}
+h1{font-size:clamp(24px,5vw,34px);font-weight:900;margin:0;text-wrap:balance;letter-spacing:.02em}
+header p{margin:6px 0 0;color:var(--muted);max-width:60ch;line-height:1.6}
+.bgsw{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
+.bgsw button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:6px 10px;border-radius:999px;cursor:pointer}
+.bgsw button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);font-weight:700}
+.bgsw button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.spec{display:flex;flex-wrap:wrap;gap:8px}
+.spec span{font-size:12px;padding:4px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.stage{aspect-ratio:320/270;max-width:100%;display:grid;place-items:center;background:var(--stage)}
+.stage img{width:100%;height:auto;display:block}
+body[data-bg="court"]{--stage:linear-gradient(transparent 82%,var(--courtline) 82% 84%,transparent 84%) ,var(--court)}
+body[data-bg="check"]{--stage:repeating-conic-gradient(#d9dee6 0 25%,#ffffff 0 50%) 0 0/20px 20px}
+body,body[data-bg="chat"]{--stage:#8cabd9}
+.meta{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:12px 14px 0}
+h2{font-size:18px;margin:0;font-weight:700}
+.file{font-family:var(--mono);font-size:12px;color:var(--muted)}
+dl{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:10px 14px 0;font-variant-numeric:tabular-nums}
+dl div{display:flex;flex-direction:column;gap:2px}
+dt{font-size:11px;color:var(--muted);letter-spacing:.05em}
+dd{margin:0;font-size:13px;font-weight:500}
+dd.ok{color:var(--ok)} dd.bad{color:var(--bad)}
+details{margin:10px 14px 14px;font-size:13px}
+summary{cursor:pointer;color:var(--accent)}
+.strip{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.strip img{width:calc(25% - 3px);height:auto;background:var(--stage);border-radius:4px}
+.extras{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end}
+.extra{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)}
+.extra .stage{border-radius:10px;border:1px solid var(--line)}
+footer{font-size:13px;color:var(--muted);line-height:1.7;max-width:70ch}
+@media (prefers-reduced-motion: reduce){.anim{animation:none}}
+</style>
+<div class="wrap">
+<header>
+  <div>
+    <h1>羽球少女・動態貼圖</h1>
+    <p>由你提供的插圖去背後製作的 8 款 LINE 動態貼圖（APNG）。動畫會自動播放；點「逐格圖片」可看每一格。</p>
+  </div>
+  <div class="bgsw" role="group" aria-label="預覽背景">背景
+    <button type="button" data-bg="chat" aria-pressed="true">聊天室</button>
+    <button type="button" data-bg="court" aria-pressed="false">球場</button>
+    <button type="button" data-bg="check" aria-pressed="false">透明格</button>
+  </div>
+</header>
+<div class="spec"><span>320 × 270 px</span><span>透明背景</span><span>12–16 格</span><span>每次播放 ≤ 4 秒</span><span>每檔 ≤ 300KB</span></div>
+<section class="grid">
+{{CARDS}}
+</section>
+<section class="extras">
+  <div class="extra"><div class="stage" style="width:160px"><img src="{{MAIN}}" alt="主要圖片" width="240" height="240"></div>main.png・主要圖片 240×240</div>
+  <div class="extra"><div class="stage" style="width:96px;aspect-ratio:96/74"><img src="{{TAB}}" alt="標籤圖片" width="96" height="74"></div>tab.png・標籤圖片 96×74</div>
+</section>
+<footer>檔案位於 repo 的 <code>line-stickers/out/</code>。上架 LINE Creators Market 時，把 01–08 的 APNG 重新命名為 01.png～08.png，連同 main.png、tab.png 打包成 zip 上傳即可。動態貼圖一組需 8、16 或 24 張。</footer>
+</div>
+<script>
+const btns=document.querySelectorAll('.bgsw button');
+function setBg(v){document.body.dataset.bg=v;btns.forEach(b=>b.setAttribute('aria-pressed',b.dataset.bg===v));try{localStorage.setItem('bg',v)}catch(e){}}
+btns.forEach(b=>b.addEventListener('click',()=>setBg(b.dataset.bg)));
+let saved='chat';try{saved=localStorage.getItem('bg')||'chat'}catch(e){}
+setBg(saved);
+</script>
